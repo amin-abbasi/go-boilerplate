@@ -1,4 +1,4 @@
-module github.com/amin4193/go-server
+module github.com/amin4193/go-boilerplate
 
 go 1.21.5
 
