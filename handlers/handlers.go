@@ -1,7 +1,11 @@
 package handlers
 
 import (
+	"fmt"
+
+	"github.com/amin4193/go-boilerplate/configs"
 	"github.com/amin4193/go-boilerplate/models"
+	srv "github.com/amin4193/go-boilerplate/services"
 
 	"net/http"
 	"time"
@@ -10,61 +14,108 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Ping(c echo.Context) error {
-	return c.String(http.StatusOK, "pong")
+func Ping(ctx echo.Context) error {
+	return ctx.String(http.StatusOK, "pong")
+}
+
+var (
+	adminUsername = "admin"
+	adminPassword = "1234"
+)
+
+type AdminLoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+func LoginAdmin(ctx echo.Context) error {
+	// Bind the request body to the AdminLoginRequest struct
+	req := new(AdminLoginRequest)
+	if err := ctx.Bind(req); err != nil {
+		// return srv.SendResponse(ctx, http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
+		return srv.SendResponse(ctx, 400, "Invalid request body")
+	}
+
+	// Validate credentials (this is a simple example, use your authentication logic here)
+	if req.Username == adminUsername && req.Password == adminPassword {
+		token := jwt.New(jwt.SigningMethodHS256)
+		claims := token.Claims.(jwt.MapClaims)
+		claims["username"] = adminUsername
+		claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
+
+		// Convert string secret key to byte slice
+		secretKeyBytes := []byte(configs.SECRET_KEY)
+
+		tokenString, err := token.SignedString(secretKeyBytes)
+		if err != nil {
+			fmt.Println(">>>> Error Generating Token: ", err)
+			return srv.SendResponse(ctx, 500, "Error Generating Token", err)
+		}
+
+		return srv.SendResponse(ctx, 200, "success", map[string]interface{}{"token": tokenString})
+	}
+
+	return srv.SendResponse(ctx, 401, "invalid credentials")
 }
 
 func Login(ctx echo.Context) error {
 	var user models.User
 	if err := ctx.Bind(&user); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+		return srv.SendResponse(ctx, 400, "body validation error", err)
 	}
 
 	// Get user from DB
-	storedUser, ok := models.DB[user.UserName]
-
-	// Validate credentials (this is a simple example, use your authentication logic here)
-	if ok && storedUser.Password == user.Password {
-		token := jwt.New(jwt.SigningMethodHS256)
-		claims := token.Claims.(jwt.MapClaims)
-		claims["username"] = user.UserName
-		claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
-
-		tokenString, err := token.SignedString(models.SECRET_KEY)
-		if err != nil {
-			return ctx.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "error generating token"})
-		}
-
-		// adds user in db
-		models.DB[user.UserName] = user
-
-		return ctx.JSON(http.StatusOK, map[string]interface{}{"token": tokenString})
+	storedUser, err := models.GetByUsername(user.UserName)
+	if err != nil {
+		fmt.Println(">>>> User not found: ", err)
+		return srv.SendResponse(ctx, 401, "User not found.")
 	}
 
-	return ctx.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "invalid credentials"})
+	// Validate credentials (this is a simple example, use your authentication logic here)
+	if storedUser.Password == user.Password {
+		return srv.SendResponse(ctx, 401, "Invalid Credentials.")
+	}
+
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["username"] = user.UserName
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
+
+	tokenString, err := token.SignedString(configs.SECRET_KEY)
+	if err != nil {
+		fmt.Println(">>>> Error on generating token: ", err)
+		return srv.SendResponse(ctx, 500, "Error on generating token.", err)
+	}
+
+	return srv.SendResponse(ctx, 200, "success", map[string]interface{}{"token": tokenString})
 }
 
 func GetUser(ctx echo.Context) error {
 	username := ctx.Param("name")
-	value, ok := models.DB[username]
-	if ok {
-		return ctx.JSON(http.StatusOK, map[string]interface{}{"username": username, "value": value})
+	user, err := models.GetByUsername(username)
+	if err != nil {
+		return srv.SendResponse(ctx, 401, "User not found.")
 	}
-	return ctx.JSON(http.StatusOK, map[string]interface{}{"username": username, "status": "no value"})
+	return srv.SendResponse(ctx, 200, "success", map[string]interface{}{"user": user})
 }
 
 func CreateUser(ctx echo.Context) error {
 	var user models.User
 	if err := ctx.Bind(&user); err != nil {
-		return ctx.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+		return srv.SendResponse(ctx, 400, "Body Validation Error", err)
 	}
 
 	// Check if the username already exists in the db
-	if _, exists := models.DB[user.UserName]; exists {
-		return ctx.JSON(http.StatusConflict, map[string]interface{}{"error": "username already exists"})
+	exists, _ := models.GetByUsername(user.UserName)
+	if exists != nil {
+		return srv.SendResponse(ctx, 409, "Username already exists.")
 	}
 
 	// adds user in db
-	models.DB[user.UserName] = user
-	return ctx.JSON(http.StatusOK, map[string]interface{}{"status": "ok", "user": user})
+	newUser, err := models.User.Create(user)
+	if err != nil {
+		fmt.Println(">>>> Could not create user: ", err)
+		return srv.SendResponse(ctx, 401, "Could not create user.", err)
+	}
+	return srv.SendResponse(ctx, 200, "success", map[string]interface{}{"status": "ok", "user": newUser})
 }

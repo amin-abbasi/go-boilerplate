@@ -1,0 +1,10 @@
+root = "." # Project root directory
+tmp_dir = "tmp"
+build_delay = 1000
+color = true
+log = "air.log"
+
+[build]
+  binary = "main"
+  cmd = "go build -o tmp/main ."
+  watch = ["./"]

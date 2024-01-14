@@ -2,21 +2,19 @@ package main
 
 import (
 	// Add my Packages
+	"github.com/amin4193/go-boilerplate/services"
 	"github.com/amin4193/go-boilerplate/handlers"
 	"github.com/amin4193/go-boilerplate/middlewares"
-	"github.com/amin4193/go-boilerplate/models"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func initDB() {
-	models.DB["amin"] = models.User{UserName: "amin", Password: "123"}
-}
-
 func main() {
-	initDB()
+	// Initialize MongoDB connection
+	services.ConnectDB()
 
+	// Initiate Echo Application
 	app := echo.New()
 
 	// Middleware
@@ -25,8 +23,9 @@ func main() {
 
 	// Routes
 	app.GET("/ping", handlers.Ping)
-	app.GET("/user/:name", handlers.GetUser)
+	app.POST("/admin/login", handlers.LoginAdmin)
 	app.POST("/login", handlers.Login)
+	app.GET("/user/:name", handlers.GetUser)
 
 	authorized := app.Group("/admin")
 	authorized.Use(middlewares.Auth)
