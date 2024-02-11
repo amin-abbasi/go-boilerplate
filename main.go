@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/amin4193/go-boilerplate/handlers"
-	"github.com/amin4193/go-boilerplate/middlewares"
-	"github.com/amin4193/go-boilerplate/services"
+	"github.com/amin-abbasi/go-boilerplate/handlers"
+	"github.com/amin-abbasi/go-boilerplate/middlewares"
+	"github.com/amin-abbasi/go-boilerplate/services"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

@@ -3,8 +3,8 @@ package middlewares
 import (
 	"fmt"
 
-	"github.com/amin4193/go-boilerplate/configs"
-	srv "github.com/amin4193/go-boilerplate/services"
+	"github.com/amin-abbasi/go-boilerplate/configs"
+	srv "github.com/amin-abbasi/go-boilerplate/services"
 
 	"strings"
 

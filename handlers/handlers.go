@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/amin4193/go-boilerplate/configs"
-	"github.com/amin4193/go-boilerplate/models"
-	srv "github.com/amin4193/go-boilerplate/services"
+	"github.com/amin-abbasi/go-boilerplate/configs"
+	"github.com/amin-abbasi/go-boilerplate/models"
+	srv "github.com/amin-abbasi/go-boilerplate/services"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"

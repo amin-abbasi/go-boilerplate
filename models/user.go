@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/amin4193/go-boilerplate/services"
+	"github.com/amin-abbasi/go-boilerplate/services"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
