@@ -5,6 +5,5 @@ color = true
 log = "air.log"
 
 [build]
-  binary = "main"
-  cmd = "go build -o tmp/main ."
+  cmd = "go build -o ./tmp/main.exe ./cmd"
   watch = ["./"]

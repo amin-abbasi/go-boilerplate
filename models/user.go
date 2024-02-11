@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/amin4193/go-boilerplate/services"
-	"github.com/amin4193/go-boilerplate/configs"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -20,15 +19,9 @@ type User struct {
 	Password string `json:"password"`
 }
 
-func getCtx() (context.Context) {
-	ctx, cancel := context.WithTimeout(context.Background(), configs.TIME_OUT_DURATION)
-	defer cancel()
-	return ctx
-}
-
-func (newUser User) Create() (User, error) {
+func (newUser User) Create(ctx context.Context) (User, error) {
 	collection := services.DB.Collection("users")
-	result, err := collection.InsertOne(getCtx(), newUser)
+	result, err := collection.InsertOne(ctx, newUser)
 	if err != nil {
 		return User{}, err
 	}
@@ -39,10 +32,9 @@ func (newUser User) Create() (User, error) {
 	return newUser, nil
 }
 
-func (u User) List() ([]User, error) {
+func (u User) List(ctx context.Context) ([]User, error) {
 	collection := services.DB.Collection("users")
 	// Implementation to retrieve list of users...
-	ctx := getCtx()
 	cursor, err := collection.Find(ctx, bson.D{})
 	if err != nil {
 		log.Fatal(err)
@@ -66,9 +58,8 @@ func (u User) List() ([]User, error) {
 	return users, nil
 }
 
-func GetByUsername(username string) (*User, error) {
+func GetByUsername(ctx context.Context, username string) (*User, error) {
 	collection := services.DB.Collection("users")
-	ctx := getCtx()
 
 	var user User
 	err := collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)

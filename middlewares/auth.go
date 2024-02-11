@@ -19,10 +19,9 @@ func Auth(next echo.HandlerFunc) echo.HandlerFunc {
 		if tokenString == "" {
 			return srv.SendResponse(ctx, 401, "Token is missing.")
 		}
-		fmt.Println(">>>> Auth - tokenString: ", tokenString)
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return configs.SECRET_KEY, nil
+			return []byte(configs.SECRET_KEY), nil
 		})
 		fmt.Println(">>>> Auth - token: ", token)
 

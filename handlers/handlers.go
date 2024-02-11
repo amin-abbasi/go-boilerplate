@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"time"
 
 	"github.com/amin4193/go-boilerplate/configs"
 	"github.com/amin4193/go-boilerplate/models"
 	srv "github.com/amin4193/go-boilerplate/services"
-
-	"net/http"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -48,7 +48,7 @@ func LoginAdmin(ctx echo.Context) error {
 
 		tokenString, err := token.SignedString(secretKeyBytes)
 		if err != nil {
-			fmt.Println(">>>> Error Generating Token: ", err)
+			log.Println(">>>> Error Generating Token: ", err)
 			return srv.SendResponse(ctx, 500, "Error Generating Token", err)
 		}
 
@@ -65,14 +65,14 @@ func Login(ctx echo.Context) error {
 	}
 
 	// Get user from DB
-	storedUser, err := models.GetByUsername(user.UserName)
+	storedUser, err := models.GetByUsername(ctx.Request().Context(), user.UserName)
 	if err != nil {
-		fmt.Println(">>>> User not found: ", err)
+		log.Println(">>>> User not found: ", err)
 		return srv.SendResponse(ctx, 401, "User not found.")
 	}
 
 	// Validate credentials (this is a simple example, use your authentication logic here)
-	if storedUser.Password == user.Password {
+	if storedUser.Password != user.Password {
 		return srv.SendResponse(ctx, 401, "Invalid Credentials.")
 	}
 
@@ -81,9 +81,10 @@ func Login(ctx echo.Context) error {
 	claims["username"] = user.UserName
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
 
-	tokenString, err := token.SignedString(configs.SECRET_KEY)
+	secretKeyBytes := []byte(configs.SECRET_KEY)
+	tokenString, err := token.SignedString(secretKeyBytes)
 	if err != nil {
-		fmt.Println(">>>> Error on generating token: ", err)
+		log.Println(">>>> Error on generating token: ", err)
 		return srv.SendResponse(ctx, 500, "Error on generating token.", err)
 	}
 
@@ -92,7 +93,7 @@ func Login(ctx echo.Context) error {
 
 func GetUser(ctx echo.Context) error {
 	username := ctx.Param("name")
-	user, err := models.GetByUsername(username)
+	user, err := models.GetByUsername(ctx.Request().Context(), username)
 	if err != nil {
 		return srv.SendResponse(ctx, 401, "User not found.")
 	}
@@ -106,16 +107,19 @@ func CreateUser(ctx echo.Context) error {
 	}
 
 	// Check if the username already exists in the db
-	exists, _ := models.GetByUsername(user.UserName)
+	exists, _ := models.GetByUsername(ctx.Request().Context(), user.UserName)
 	if exists != nil {
 		return srv.SendResponse(ctx, 409, "Username already exists.")
 	}
 
 	// adds user in db
-	newUser, err := models.User.Create(user)
+	newUser, err := models.User.Create(user, ctx.Request().Context())
 	if err != nil {
-		fmt.Println(">>>> Could not create user: ", err)
-		return srv.SendResponse(ctx, 401, "Could not create user.", err)
+		// Convert error to string
+		errString := fmt.Sprintf("%v", err)
+
+		log.Println(">>>>>>> Could not create user: ", errString)
+		return srv.SendResponse(ctx, 401, "Could not create user.", errString)
 	}
 	return srv.SendResponse(ctx, 200, "success", map[string]interface{}{"status": "ok", "user": newUser})
 }

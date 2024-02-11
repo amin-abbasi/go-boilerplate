@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -14,26 +13,38 @@ var (
 	DB     *mongo.Database
 	uri    = "mongodb://localhost:27017"
 	dbName = "go_db_test"
+	client *mongo.Client
 )
 
 func ConnectDB() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
 
-	//ping the database
+	// Connect to MongoDB
+	var err error
+	client, err = mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	if err != nil {
+			log.Fatalf(">>> Error connecting to MongoDB: %v\n", err)
+	}
+
+	// Check the connection
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatal(err)
+			log.Fatalf(">>> Error pinging MongoDB: %v\n", err)
 	}
-	fmt.Println("<<< Connected to MongoDB >>>")
+
+	// Set the database instance
 	DB = client.Database(dbName)
+	log.Println("<<< Connected to MongoDB >>>")
+}
+
+func DisconnectDB() {
+	if client != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			if err := client.Disconnect(ctx); err != nil {
+					log.Fatalf(">>> Error disconnecting from MongoDB: %v\n", err)
+			}
+			log.Println("<<< Disconnected from MongoDB >>>")
+	}
 }
