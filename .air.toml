@@ -1,9 +1,4 @@
-root = "." # Project root directory
+root = "."
 tmp_dir = "tmp"
-build_delay = 1000
-color = true
-log = "air.log"
-
-[build]
-  cmd = "go build -o ./tmp/main.exe ./cmd"
-  watch = ["./"]
+build_cmd = "go build -o ./tmp/main ."
+run_cmd = "./tmp/main"
