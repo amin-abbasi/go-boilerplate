@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  go-boilerplate:
+    container_name: go-boilerplate
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - './go-boilerplate:/opt/go-boilerplate:cached'
+    restart: unless-stopped
+    env_file: .
+    ports:
+      - ${SERVER_PORT}:4000
+    # environment:
+    #   MONGO_URI: mongodb://localhost:${DB_PORT}/${DB_NAME}
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - backend
+
+  # MongoDB
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - ${DB_PORT}:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend
+
+  # Redis Service
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  mongo_data:
+
+networks:
+  backend:
