@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/amin-abbasi/go-boilerplate/configs"
 
@@ -15,19 +16,46 @@ var (
 	client *mongo.Client
 )
 
+func tryConnect() (*mongo.Client, error) {
+	// Initialize MongoDB connection parameters
+	host := configs.GetEnvVariable("DB_HOST")
+	port := configs.GetEnvVariable("DB_PORT")
+	dbURL := "mongodb://" + host + ":" + port
+	log.Printf(">>> DB URL: %v", dbURL)
+
+	maxRetries := 5
+	retryDelay := time.Second * 5
+
+	// Retry connecting to MongoDB
+	var err error
+	for retries := 0; retries < maxRetries; retries++ {
+		client, err = mongo.Connect(context.Background(), options.Client().ApplyURI(dbURL))
+		if err == nil {
+			// Connection successful, exit retry loop
+			return client, err
+		}
+		log.Printf("Error connecting to MongoDB: %v", err)
+		log.Printf("Retrying in %v...", retryDelay)
+		time.Sleep(retryDelay)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer DisconnectDB()
+	return nil, err
+}
+
 func ConnectDB() {
 	ctx, cancel := context.WithTimeout(context.Background(), configs.TIME_OUT_DURATION)
 	defer cancel()
 
-	// Get Variables
-	host := configs.GetEnvVariable("DB_HOST")
-	port := configs.GetEnvVariable("DB_PORT")
 	dbName := configs.GetEnvVariable("DB_NAME")
-	dbURL := "mongodb://" + host + ":" + port
 
 	// Connect to MongoDB
 	var err error
-	client, err = mongo.Connect(ctx, options.Client().ApplyURI(dbURL))
+	client, err = tryConnect()
 	if err != nil {
 		log.Fatalf(">>> Error connecting to MongoDB: %v\n", err)
 	}

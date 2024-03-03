@@ -1,14 +1,20 @@
 version: '3.7'
 
 services:
-  go_boilerplate:
-    container_name: go_boilerplate
+  go_app:
+    container_name: go_app
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - go_boilerplate_volume:/opt/go_boilerplate:cached
+      - go_app_volume:/opt/go_app:cached
     restart: unless-stopped
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:${SERVER_PORT}/ping"]
+    #   interval: 1m
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 30s
     env_file: .env
     ports:
       - "${SERVER_PORT}:4000"
@@ -23,6 +29,7 @@ services:
     image: mongo:latest
     container_name: mongo
     restart: unless-stopped
+    # restart: on-failure
     ports:
       - "${DB_PORT}:27017"
     volumes:
@@ -33,13 +40,14 @@ services:
   # Redis
   redis:
     image: redis:alpine
+    container_name: redis
     restart: unless-stopped
     networks:
       - backend
 
 volumes:
   mongo_data:
-  go_boilerplate_volume:
+  go_app_volume:
 
 networks:
   backend:

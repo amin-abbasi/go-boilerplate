@@ -1,6 +1,6 @@
 FROM golang:1.20-alpine
 
-WORKDIR /opt/go_boilerplate
+WORKDIR /opt/go_app
 
 COPY . .
 
