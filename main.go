@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/amin-abbasi/go-boilerplate/configs"
 	"github.com/amin-abbasi/go-boilerplate/handlers"
 	"github.com/amin-abbasi/go-boilerplate/middlewares"
 	"github.com/amin-abbasi/go-boilerplate/services"
@@ -41,7 +42,8 @@ func main() {
 
 	// Start server in a separate goroutine
 	go func() {
-		if err := app.Start(":4000"); err != nil {
+		serverPort := configs.GetEnvVariable("SERVER_PORT")
+		if err := app.Start(":" + serverPort); err != nil {
 			log.Printf("<<< Error starting server >>> : %v", err)
 		}
 	}()

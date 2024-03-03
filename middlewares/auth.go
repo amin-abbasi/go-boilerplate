@@ -21,7 +21,7 @@ func Auth(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte(configs.SECRET_KEY), nil
+			return []byte(configs.GetEnvVariable("JWT_SECRET_KEY")), nil
 		})
 		fmt.Println(">>>> Auth - token: ", token)
 

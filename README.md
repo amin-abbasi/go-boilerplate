@@ -36,7 +36,7 @@ Contains data models and operations related to the user database.
 - **`models.go`**
   - Defines the `User` struct representing a user with username, email, and password fields.
   - Manages the MongoDB database connection and collections.
-  - Defines the `SECRET_KEY` used for JWT token generation.
+  - Defines the `JWT_SECRET_KEY` used for JWT token generation.
 
 ## Running the Project
 

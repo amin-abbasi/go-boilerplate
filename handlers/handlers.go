@@ -19,8 +19,9 @@ func Ping(ctx echo.Context) error {
 }
 
 var (
-	adminUsername = "admin"
-	adminPassword = "1234"
+	adminUsername  = configs.GetEnvVariable("ADMIN_USER")
+	adminPassword  = configs.GetEnvVariable("ADMIN_PASS")
+	secretKeyBytes = []byte(configs.GetEnvVariable("JWT_SECRET_KEY"))
 )
 
 type AdminLoginRequest struct {
@@ -42,9 +43,6 @@ func LoginAdmin(ctx echo.Context) error {
 		claims := token.Claims.(jwt.MapClaims)
 		claims["username"] = adminUsername
 		claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
-
-		// Convert string secret key to byte slice
-		secretKeyBytes := []byte(configs.SECRET_KEY)
 
 		tokenString, err := token.SignedString(secretKeyBytes)
 		if err != nil {
@@ -81,7 +79,6 @@ func Login(ctx echo.Context) error {
 	claims["username"] = user.UserName
 	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
 
-	secretKeyBytes := []byte(configs.SECRET_KEY)
 	tokenString, err := token.SignedString(secretKeyBytes)
 	if err != nil {
 		log.Println(">>>> Error on generating token: ", err)
