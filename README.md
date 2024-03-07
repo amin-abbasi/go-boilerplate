@@ -69,6 +69,22 @@ run_cmd = "./tmp/main"
 - **`GET /user/:name`**: Retrieves user details by providing the username.
 - **`POST /admin/user`**: Creates a new user with a unique username. This endpoint is protected and requires a valid JWT token in the Authorization header (Bearer token).
 
-### Notes
+### Some Examples
+Here you can easily call `ping` API using this cURL command:
+`curl -X http://localhost:4000/ping`
+which will give you `pong` string as a response.
 
-This boilerplate project showcases basic user authentication functionality using JWT tokens. Ensure to enhance security and error handling as needed based on your application's requirements.
+Another example is to login as admin, which I hardcoded a default username/password (which usually you shouldn't!!):
+```
+curl -X POST http://localhost:4000/admin/login \
+-H "Content-Type: application/json" \
+-d '{
+    "username": "admin",
+    "password": "1234"
+}'
+```
+which it should give you a successful response with jwt token included.
+
+### Notes
+This boilerplate project is implemented just to showcase basic APIs, database usage via MongoDB and also user authentication functionality using JWT tokens. 
+Please ensure to enhance security and error handling as needed based on your application's requirements.
