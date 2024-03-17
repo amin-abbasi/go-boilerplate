@@ -21,6 +21,7 @@ import (
 func main() {
 	// Initialize MongoDB connection
 	services.ConnectDB()
+	services.ConnectRedis()
 	defer services.DisconnectDB() // Ensure database is closed when main function exits
 
 	// Initiate Echo Application

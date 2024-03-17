@@ -42,13 +42,19 @@ func LoginAdmin(ctx echo.Context) error {
 		token := jwt.New(jwt.SigningMethodHS256)
 		claims := token.Claims.(jwt.MapClaims)
 		claims["username"] = adminUsername
-		claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
+		exp := time.Now().Add(time.Hour * 1).Unix() // Token expiration time
+		claims["exp"] = exp
 
 		tokenString, err := token.SignedString(secretKeyBytes)
 		if err != nil {
 			log.Println(">>>> Error Generating Token: ", err)
 			return srv.SendResponse(ctx, 500, "Error Generating Token", err)
 		}
+
+		// Save Token in Redis
+		expTime := time.Unix(exp, 0)
+		durationUntilExp := time.Until(expTime)
+		srv.SetToken(tokenString, durationUntilExp)
 
 		return srv.SendResponse(ctx, 200, "success", map[string]interface{}{"token": tokenString})
 	}
@@ -77,13 +83,19 @@ func Login(ctx echo.Context) error {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["username"] = user.UserName
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expiration time
+	exp := time.Now().Add(time.Hour * 1).Unix() // Token expiration time
+	claims["exp"] = exp
 
 	tokenString, err := token.SignedString(secretKeyBytes)
 	if err != nil {
 		log.Println(">>>> Error on generating token: ", err)
 		return srv.SendResponse(ctx, 500, "Error on generating token.", err)
 	}
+
+	// Save Token in Redis
+	expTime := time.Unix(exp, 0)
+	durationUntilExp := time.Until(expTime)
+	srv.SetToken(tokenString, durationUntilExp)
 
 	return srv.SendResponse(ctx, 200, "success", map[string]interface{}{"token": tokenString})
 }

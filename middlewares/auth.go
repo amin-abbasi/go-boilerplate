@@ -20,6 +20,12 @@ func Auth(next echo.HandlerFunc) echo.HandlerFunc {
 			return srv.SendResponse(ctx, 401, "Token is missing.")
 		}
 
+		exists, err := srv.GetToken(tokenString)
+		if err != nil || !exists {
+			fmt.Println(">>>> Invalid Token: does not exists")
+			return srv.SendResponse(ctx, 401, "Invalid Token.")
+		}
+
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return []byte(configs.GetEnvVariable("JWT_SECRET_KEY")), nil
 		})
@@ -27,6 +33,7 @@ func Auth(next echo.HandlerFunc) echo.HandlerFunc {
 
 		if err != nil || !token.Valid {
 			fmt.Println(">>>> Invalid Token: ", err)
+			srv.DeleteToken(tokenString)
 			return srv.SendResponse(ctx, 401, "Invalid Token.")
 		}
 
